@@ -1,6 +1,7 @@
 ﻿name: az4
 channels:
   - defaults
+  - pytorch
 dependencies:
   - blas=1.0=mkl
   - bzip2=1.0.8=h2bbff1b_6
@@ -32,7 +33,10 @@ dependencies:
   - wheel=0.44.0=py312haa95532_0
   - xz=5.4.6=h8cc25b3_1
   - zlib=1.2.13=h8cc25b3_1
+  - pytorch
+  - torchvision
+  - torchaudio
+  - cudatoolkit=11.3
   - pip:
       - coverage==7.6.4
       - pytest-cov==6.0.0
-prefix: C:\Users\cihan_ezs\.conda\envs\az4
