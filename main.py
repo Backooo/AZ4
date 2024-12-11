@@ -1,10 +1,9 @@
 from typing import Callable
 import time
+from agents.agent_negamax.negamax import *  # Remark: In general, avoid wild card imports. They pollute the name space and make it hard to track where things come from
 from game_utils import PLAYER1, PLAYER2, PLAYER1_PRINT, PLAYER2_PRINT, GameState, MoveStatus, GenMove
 from game_utils import initialize_game_state, pretty_print_board, apply_player_action, check_end_state, check_move_status
 from agents.agent_human_user import user_move
-from agents.agent_MCTS.mcts import *
-
 
 
 def human_vs_agent(
@@ -68,4 +67,4 @@ def human_vs_agent(
 
 
 if __name__ == "__main__":
-    human_vs_agent(mcts_agent, user_move, "MCTS Agent", "You")
+    human_vs_agent(negamax_agent, user_move, "Negamax Agent", "Player")
