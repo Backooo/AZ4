@@ -1,46 +1,31 @@
 import numpy as np
-from .node import Node
 from typing import Optional, Tuple
-from game_utils import BoardPiece, PlayerAction, SavedState, BOARD_COLS, check_move_status, MoveStatus
-import time
+from game_utils import PLAYER1, PLAYER2, BoardPiece, PlayerAction, SavedState
+from .node import Node
 
 def generate_move_mcts(board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState]) -> Tuple[PlayerAction, Optional[SavedState]]:
-    """
-    Generates the next move for a player using the Monte Carlo Tree Search (MCTS) algorithm.
+    """Generate moves using MCTS
 
     Args:
-        board (np.ndarray): The current state of the game board.
-        player (BoardPiece): The current player making the move (PLAYER1 or PLAYER2).
-        saved_state (Optional[SavedState]): An optional saved state for the game (not utilized here).
+        board (np.ndarray): current game board
+        player (BoardPiece): current player making the move
+        saved_state (Optional[SavedState]): saved state for MCTS
 
     Returns:
-        Tuple[PlayerAction, Optional[SavedState]]: The column index where the player will place their piece 
-        and the (unchanged) saved state.
+        Tuple[PlayerAction, Optional[SavedState]]: selected move and updated saved state
     """
-    Node.set_player(player)
-    Node.update_root_by_board(board)
-    start = time.time()
-    end = 0
-    while(end-start < 5):
-        simulate()
-        end = time.time()
-    move = PlayerAction(make_move())
-    return tuple([move, saved_state])
+    Node.set_root(board, player)
+    num_simulations = 3000
+    
+    for _ in range(num_simulations):
+        leaf = Node.current_root
+        while leaf.children:
+            leaf = leaf.select_child()
 
+        if leaf.total_simulations == 0:
+            result = leaf.simulate()
+            leaf.backpropagate(result)
+        else:
+            leaf.expand()
 
-def simulate():
-    """
-    Simulates potential future moves to a specified depth by expanding the tree from the best leaf node.
-    """
-    leaf = Node.get_leaf_by_best_value()
-    leaf.create_children()
-
-
-def make_move() -> int:
-    """
-    Selects the next move based on the highest-weighted child node.
-
-    Returns:
-        int: The column index corresponding to the best move chosen by the MCTS algorithm.
-    """
-    return Node.current_root.choose_child_as_move_by_weight().chosen_column
+    return Node.best_move(), saved_state
