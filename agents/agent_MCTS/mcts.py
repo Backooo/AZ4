@@ -15,14 +15,14 @@ def generate_move_mcts(board: np.ndarray, player: BoardPiece, saved_state: Optio
         Tuple[PlayerAction, Optional[SavedState]]: selected move and updated saved state
     """
     Node.set_root(board, player)
-    num_simulations = 3000
+    num_simulations = 1000
     
     for _ in range(num_simulations):
         leaf = Node.current_root
         while leaf.children:
             leaf = leaf.select_child()
 
-        if leaf.total_simulations == 0:
+        if leaf.total_simulations == 0: # Ich glaube hier könnte Ineffizient sein
             result = leaf.simulate()
             leaf.backpropagate(result)
         else:

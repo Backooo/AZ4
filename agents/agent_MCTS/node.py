@@ -1,6 +1,12 @@
 import numpy as np
 from game_utils import PLAYER1, PLAYER2, BoardPiece, GameState, PlayerAction, MoveStatus, apply_player_action, check_move_status, check_end_state, connected_four
 
+
+# Entferne Checks aus Simulation und pass weiter an
+# Simulate an Backpropagation anpassen sodass nur Win zurückgegeben wird und nicht permanente Perspektivenwechsel
+# Wurzel 2
+# Backpropagation anpassen
+# 
 class Node:
     """Class representing a node in the Monte Carlo Tree Search for Connect Four"""
 
@@ -13,6 +19,8 @@ class Node:
         self.total_simulations = 0
         self.win_simulations = 0
         self.player = player
+        # Attribut hinzufügen der checkt ob eine Node gewinnt, somit müssen Siblings nicht mehr überprüft werden und Selection kann da gestoppt werden
+        # Nur simuliert wenn noch kein Endstate gibt, wenn Endstate einfach backpropagaten
 
     @classmethod
     def set_root(cls, board: np.ndarray, player: BoardPiece):
@@ -50,7 +58,7 @@ class Node:
         current_player = self.player
         depth = 0
 
-        while depth < max_depth:
+        while depth < max_depth: # Eventuell kann Tiefe entfernt werden
             valid_moves = [
                 col for col in range(board_copy.shape[1])
                 if check_move_status(board_copy, PlayerAction(col)) == MoveStatus.IS_VALID
@@ -61,9 +69,9 @@ class Node:
             for col in valid_moves:
                 temp_board = board_copy.copy()
                 apply_player_action(temp_board, col, current_player)
-                if check_end_state(temp_board, current_player) == GameState.IS_WIN:
+                """ if check_end_state(temp_board, current_player) == GameState.IS_WIN: ## Warum zweimal apply_player_action ? 
                     apply_player_action(board_copy, col, current_player)
-                    return True
+                    return True """
 
             apply_player_action(board_copy, np.random.choice(valid_moves), current_player)
             current_player = PLAYER1 if current_player == PLAYER2 else PLAYER2
@@ -77,11 +85,12 @@ class Node:
         Args:
             result (bool): board result from simulation
         """
+        _result = not result
         self.total_simulations += 1
-        if result:
+        if _result:
             self.win_simulations += 1
         if self.parent:
-            self.parent.backpropagate(result)
+            self.parent.backpropagate(not _result)
 
     def select_child(self):
         """Select child with best Upper Confidence Bound (UCB) value (Otherwise MCTS filled board up from left to right with no strategy)
@@ -95,7 +104,7 @@ class Node:
                 return float('inf')
             exploitation = child.win_simulations / child.total_simulations
             exploration = np.sqrt(np.log(self.total_simulations) / child.total_simulations)
-            return exploitation + 2 * exploration
+            return exploitation + np.sqrt(2) * exploration
 
         return max(self.children, key=ucb)
 

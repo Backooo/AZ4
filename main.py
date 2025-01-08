@@ -2,6 +2,7 @@ from typing import Callable
 import time
 from agents.agent_MCTS.mcts import generate_move_mcts
 from agents.agent_negamax.negamax import *  # Remark: In general, avoid wild card imports. They pollute the name space and make it hard to track where things come from
+from agents.agents_random.random import generate_move_random
 from game_utils import PLAYER1, PLAYER2, PLAYER1_PRINT, PLAYER2_PRINT, GameState, MoveStatus, GenMove
 from game_utils import initialize_game_state, pretty_print_board, apply_player_action, check_end_state, check_move_status
 from agents.agent_human_user import user_move
