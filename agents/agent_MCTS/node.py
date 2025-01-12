@@ -19,6 +19,7 @@ class Node:
         self.total_simulations = 0
         self.win_simulations = 0
         self.player = player
+        self.is_terminal = check_end_state(self.board, self.player) == GameState.IS_WIN
         # Attribut hinzufügen der checkt ob eine Node gewinnt, somit müssen Siblings nicht mehr überprüft werden und Selection kann da gestoppt werden
         # Nur simuliert wenn noch kein Endstate gibt, wenn Endstate einfach backpropagaten
 
@@ -34,6 +35,9 @@ class Node:
 
     def expand(self):
         """Expand node by creating child nodes for valid moves"""
+        if self.is_terminal:
+            return
+        
         valid_moves = [
             col for col in range(self.board.shape[1])
             if check_move_status(self.board, PlayerAction(col)) == MoveStatus.IS_VALID
@@ -57,6 +61,9 @@ class Node:
         board_copy = self.board.copy()
         current_player = self.player
         depth = 0
+        
+        if self.is_terminal:
+            return check_end_state(board_copy, self.player) == GameState.IS_WIN
 
         while depth < max_depth: # Eventuell kann Tiefe entfernt werden
             valid_moves = [
@@ -90,7 +97,7 @@ class Node:
         if _result:
             self.win_simulations += 1
         if self.parent:
-            self.parent.backpropagate(not _result)
+            self.parent.backpropagate(result)
 
     def select_child(self):
         """Select child with best Upper Confidence Bound (UCB) value (Otherwise MCTS filled board up from left to right with no strategy)
@@ -112,7 +119,7 @@ class Node:
     def best_move(cls):
         """Return column of best move from  root
 
-        Returns:
+        Returns://
             PlayerAction: best move from simulated games
         """
         best_child = max(cls.current_root.children, key=lambda c: c.total_simulations)

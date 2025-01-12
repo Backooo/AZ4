@@ -15,7 +15,7 @@ def generate_move_mcts(board: np.ndarray, player: BoardPiece, saved_state: Optio
         Tuple[PlayerAction, Optional[SavedState]]: selected move and updated saved state
     """
     Node.set_root(board, player)
-    num_simulations = 1000
+    num_simulations = 7000
     
     for _ in range(num_simulations):
         leaf = Node.current_root
