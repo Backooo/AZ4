@@ -1,6 +1,7 @@
 import numpy as np
+import torch
 from game_utils import PLAYER1, PLAYER2, BoardPiece, GameState, PlayerAction, MoveStatus, apply_player_action, check_move_status, check_end_state, connected_four
-
+from .nn import AlphaZeroNet
 
 # Entferne Checks aus Simulation und pass weiter an
 # Simulate an Backpropagation anpassen sodass nur Win zurückgegeben wird und nicht permanente Perspektivenwechsel
@@ -33,8 +34,8 @@ class Node:
         """
         cls.current_root = Node(board, player=player)
 
-    def expand(self):
-        """Expand node by creating child nodes for valid moves"""
+    def expand(self, policy=None):
+        """Expand node using valid moves and optionally prioritize with policy."""
         if self.is_terminal:
             return
         
@@ -42,14 +43,24 @@ class Node:
             col for col in range(self.board.shape[1])
             if check_move_status(self.board, PlayerAction(col)) == MoveStatus.IS_VALID
         ]
-
+        
+        if policy is not None:
+            move_probs = {col: policy[col] for col in valid_moves}
+            valid_moves = sorted(move_probs, key=move_probs.get, reverse=True)
+        
         for col in valid_moves:
             new_board = self.board.copy()
             apply_player_action(new_board, col, self.player)
             child = Node(new_board, parent=self, player=PLAYER1 if self.player == PLAYER2 else PLAYER2)
             self.children.append(child)
 
-    def simulate(self, max_depth=20):
+    def simulate(self):
+        """Simulate using a simplified rollout or network evaluation."""
+        board_tensor = torch.tensor(self.board, dtype=torch.float32).unsqueeze(0)
+        _, value = AlphaZeroNet(self.board.shape, num_actions=self.board.shape[1])(board_tensor)
+        return value.item() > 0  # Treat positive value as a win
+
+    def simulate_mtcs(self, max_depth=20):
         """Simulate random game from selected node
 
         Args:
@@ -86,7 +97,14 @@ class Node:
 
         return check_end_state(board_copy, self.player) == GameState.IS_WIN
 
-    def backpropagate(self, result: bool):
+    def backpropagate(self, result: float):
+        """Backpropagation of network-evaluated results."""
+        self.total_simulations += 1
+        self.win_simulations += result  # Result is already a float value
+        if self.parent:
+            self.parent.backpropagate(-result)  # Flip perspective for the parent
+
+    def backpropagate_o(self, result: bool):
         """Backpropagation of simulated boards
 
         Args:

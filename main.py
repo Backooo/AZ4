@@ -5,6 +5,7 @@ from agents.agents_random.random import generate_move_random
 from game_utils import PLAYER1, PLAYER2, PLAYER1_PRINT, PLAYER2_PRINT, GameState, MoveStatus, GenMove
 from game_utils import initialize_game_state, pretty_print_board, apply_player_action, check_end_state, check_move_status
 from agents.agent_human_user import user_move
+from agents.agent_MCTS.nn import AlphaZeroNet  # Assuming this is where your model is defined
 
 
 def human_vs_agent(
@@ -68,4 +69,14 @@ def human_vs_agent(
 
 
 if __name__ == "__main__":
-    human_vs_agent(generate_move_mcts, generate_move_random, "MCTS Agent", "Player")
+    # Initialize your model here
+    model = AlphaZeroNet(board_shape=(6, 7), num_actions=7)  # Example, adjust according to your game setup
+    model.eval()  # Set the model to evaluation mode
+
+    # Wrap generate_move_mcts in a lambda function to pass the model
+    human_vs_agent(
+        generate_move_1=lambda board, player, saved_state, model=model: generate_move_mcts(board, player, saved_state, model),
+        generate_move_2=generate_move_random,
+        player_1="MCTS Agent",
+        player_2="Player"
+    )
