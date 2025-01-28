@@ -1,6 +1,10 @@
 from typing import Callable
 import time
+
+import torch
 from agents.agent_MCTS.mcts import generate_move_mcts
+from agents.agent_MCTS.neuralNetwork import AlphaZeroNet
+from agents.agent_MCTS.train import Connect4Dataset, self_play_games, train_model
 from agents.agents_random.random import generate_move_random
 from game_utils import PLAYER1, PLAYER2, PLAYER1_PRINT, PLAYER2_PRINT, GameState, MoveStatus, GenMove
 from game_utils import initialize_game_state, pretty_print_board, apply_player_action, check_end_state, check_move_status
@@ -68,4 +72,55 @@ def human_vs_agent(
 
 
 if __name__ == "__main__":
-    human_vs_agent(generate_move_mcts, generate_move_random, "MCTS Agent", "Player")
+    # Create or load model
+    model = AlphaZeroNet(board_shape=(6, 7), num_actions=7)  
+    model.to('cuda')
+    
+    model.train()  # Set in train mode
+    
+    t0 = time.time()
+    print("Generating self-play data...")
+    
+    states, policies, values = self_play_games(
+        model=model,
+        num_games=450, # how many full self-play games to generate
+        num_simulations=5000 # how many MCTS simulations per move
+    )
+    print(f"Time to generate self-play data: {time.time() - t0:.3f}s")
+    print(f"Collected {len(states)} training positions.")
+
+    dataset = Connect4Dataset(states, policies, values)
+    train_model(
+        model=model,
+        dataset=dataset,
+        epochs=10,
+        batch_size=128,
+        lr=1e-4,
+        device="cuda"
+    )
+
+    torch.save(model.state_dict(), "connect4_alphazero_trained.pt")
+    
+    
+    print("\nNow letting two MCTS agents play after training...\n")
+    model.load_state_dict(torch.load("connect4_alphazero_trained.pt", weights_only=True))
+    model.eval()
+    human_vs_agent(
+        generate_move_1=lambda board, player, saved_state, model=model: generate_move_mcts(
+            board=board,
+            player=player,
+            saved_state=saved_state,
+            model=model,
+            num_simulations=7000
+        ),
+        generate_move_2=lambda board, player, saved_state: generate_move_mcts(
+            board=board,
+            player=player,
+            saved_state=saved_state,
+            model=model,
+            num_simulations=7000
+        ),
+        player_1="MCTS Agent 1",
+        player_2="MCTS Agent 2"
+    )
+    
