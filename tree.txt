@@ -1,0 +1,27 @@
+.
+├── LICENSE
+├── README.md
+├── __pycache__
+│   ├── game_utils.cpython-310.pyc
+│   └── game_utils.cpython-38.pyc
+├── agents
+│   ├── __init__.py
+│   ├── __pycache__
+│   ├── agent_MCTS
+│   ├── agent_human_user
+│   ├── agent_negamax
+│   ├── agents_random
+│   └── common.py
+├── az4_trained.pt
+├── environment.yml
+├── game_utils.py
+├── main.py
+├── requirements.txt
+├── test.py
+├── tests
+│   ├── __init__.py
+│   ├── test_game_utils.py
+│   └── test_negamax.py
+└── tree.txt
+
+9 directories, 16 files
