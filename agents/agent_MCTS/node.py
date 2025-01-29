@@ -69,7 +69,7 @@ class Node:
 
         if self.net is not None and self.policy is None:
             with torch.no_grad():
-                board_tensor = torch.tensor(self.board, dtype=torch.float32).unsqueeze(0).unsqueeze(0).to('cuda')
+                board_tensor = torch.tensor(self.board, dtype=torch.float32).unsqueeze(0).unsqueeze(0).to("cpu")
                 policy_tensor, value_tensor = self.net(board_tensor)
             policy_arr = policy_tensor.squeeze(0).cpu().numpy()
             value_est = value_tensor.item()

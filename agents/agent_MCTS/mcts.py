@@ -32,6 +32,7 @@ def generate_move_mcts(
         Tuple[PlayerAction, Optional[SavedState]]: The column index where the player will place their piece
         and the (unchanged) saved state.
     """
+        
     root = Node(
         board=board,
         parent=None,

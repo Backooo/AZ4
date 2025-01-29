@@ -74,7 +74,7 @@ def human_vs_agent(
 if __name__ == "__main__":
     # Create or load model
     model = AlphaZeroNet(board_shape=(6, 7), num_actions=7)  
-    model.to('cuda')
+    model.to('cpu')
     
     model.train()  # Set in train mode
     
@@ -83,10 +83,11 @@ if __name__ == "__main__":
     
     states, policies, values = self_play_games(
         model=model,
-        num_games=450, # how many full self-play games to generate
-        num_simulations=5000 # how many MCTS simulations per move
+        num_games=2, # how many full self-play games to generate
+        num_simulations=1000 # how many MCTS simulations per move
     )
     print(f"Time to generate self-play data: {time.time() - t0:.3f}s")
+    t1 = time.time()
     print(f"Collected {len(states)} training positions.")
 
     dataset = Connect4Dataset(states, policies, values)
@@ -96,14 +97,15 @@ if __name__ == "__main__":
         epochs=10,
         batch_size=128,
         lr=1e-4,
-        device="cuda"
+        device="cpu"
     )
+    print(f"Time to train model: {time.time() - t1:.3f}s")
 
-    torch.save(model.state_dict(), "connect4_alphazero_trained.pt")
+    torch.save(model.state_dict(), "az4_trained.pt")
     
     
-    print("\nNow letting two MCTS agents play after training...\n")
-    model.load_state_dict(torch.load("connect4_alphazero_trained.pt", weights_only=True))
+    print("\Letting two MCTS agents play after training\n")
+    model.load_state_dict(torch.load("az4_trained.pt", weights_only=True))
     model.eval()
     human_vs_agent(
         generate_move_1=lambda board, player, saved_state, model=model: generate_move_mcts(
@@ -111,16 +113,15 @@ if __name__ == "__main__":
             player=player,
             saved_state=saved_state,
             model=model,
-            num_simulations=7000
+            num_simulations=2500
         ),
         generate_move_2=lambda board, player, saved_state: generate_move_mcts(
             board=board,
             player=player,
             saved_state=saved_state,
             model=model,
-            num_simulations=7000
+            num_simulations=2500
         ),
         player_1="MCTS Agent 1",
         player_2="MCTS Agent 2"
     )
-    
