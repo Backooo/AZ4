@@ -16,7 +16,7 @@ RUN conda env create -f environment.yml
 
 # Set the environment for the conda environment
 # Replace 'myenv' with the name of your environment defined in environment.yml
-ENV PATH /opt/conda/envs/myenv/bin:$PATH
+ENV PATH /opt/conda/envs/az4/bin:$PATH
 
 # Copy the remaining project files (optional)
 COPY . .

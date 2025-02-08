@@ -64,12 +64,14 @@ class Node:
         Expand node by creating child node for untried valid move.
         If neural network is available, use it to get policy probabilities.
         """
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+
         if self.is_terminal or not self.untried_moves:
             return None
 
         if self.net is not None and self.policy is None:
             with torch.no_grad():
-                board_tensor = torch.tensor(self.board, dtype=torch.float32).unsqueeze(0).unsqueeze(0).to("cpu")
+                board_tensor = torch.tensor(self.board, dtype=torch.float32).unsqueeze(0).unsqueeze(0).to("cuda")
                 policy_tensor, value_tensor = self.net(board_tensor)
             policy_arr = policy_tensor.squeeze(0).cpu().numpy()
             value_est = value_tensor.item()

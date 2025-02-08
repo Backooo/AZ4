@@ -1,17 +1,16 @@
-name: pp
+name: az4
 channels:
-  - gurobi
-  - free
+  - pytorch
+  - nvidia
   - conda-forge
-  - http://conda.anaconda.org/gurobi
+  - defaults
 dependencies:
-  - conda=22.11.1=py310hbe9552e_1
-  - conda-package-handling=1.8.1=py310hf8d0d8f_1
-  - python=3.10.6=hbce4517_0_cpython
+  - python=3.10
+  - pytorch=2.2.0
+  - torchvision=0.17.0
+  - pip
   - pip:
-      - setuptools==69.2.0
-      - pytorch-lightning==2.1.0
-      - torch==2.0.0
+      - pytorch-lightning==2.2.0
       - numpy==1.26.4
       - pandas==2.2.2
       - typing-extensions==4.11.0
