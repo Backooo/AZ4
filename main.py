@@ -131,6 +131,9 @@ if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model.to(device)
     
+    '''
+    Uncomment to train model and tweak parameters
+    
     num_cycles = 13
     for cycle_i in range(num_cycles):
         
@@ -156,9 +159,10 @@ if __name__ == "__main__":
             device=device
         )
         print(f"Time to train model: {time.time() - t1:.3f}s")
-    
-    
-        print("\Letting two MCTS agents play after training\n")
+        
+    '''
+
+    print("\Letting two MCTS agents play after training\n")
     
     model_state_dict = torch.load("az4_trained.pt", map_location=device,
                                   weights_only=True)
@@ -170,14 +174,14 @@ if __name__ == "__main__":
         player=player,
         saved_state=saved_state,
         model=model,
-        num_simulations=2500
+        num_simulations=2000
     ),
         generate_move_2=lambda board, player, saved_state, model=model: generate_move_mcts(
         board=board,
         player=player,
         saved_state=saved_state,
         model=model,
-        num_simulations=2500
+        num_simulations=2000
     ),
         player_1="MCTS Agent 1",
         player_2="MCTS Agent 2"
