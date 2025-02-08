@@ -3,8 +3,6 @@ from typing import Optional, Tuple
 import torch.nn as nn
 
 from game_utils import (
-    PLAYER1,
-    PLAYER2,
     BoardPiece,
     PlayerAction,
     SavedState,
@@ -15,7 +13,7 @@ from .node import Node
 def generate_move_mcts(
     board: np.ndarray,
     player: BoardPiece,
-    saved_state: Optional[object] = None,
+    saved_state: Optional[SavedState] = None, # If not working replace SavedState with object
     num_simulations: int = 7000,
     model: Optional[nn.Module] = None,
 ):

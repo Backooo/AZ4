@@ -6,12 +6,11 @@ import concurrent.futures
 from agents.agent_MCTS.mcts import generate_move_mcts
 from agents.agent_MCTS.neuralNetwork import AlphaZeroNet
 from agents.agent_MCTS.train import Connect4Dataset, self_play_games, train_model
-from game_utils import *
+from game_utils import PLAYER1, PLAYER1_PRINT, PLAYER2, PLAYER2_PRINT, BoardPiece, GameState, GenMove, MoveStatus, PlayerAction, SavedState, apply_player_action, check_end_state, check_move_status, initialize_game_state, pretty_print_board 
 
 def query_user(prompt_function: Callable) -> Any:
     usr_input = prompt_function("Column? ")
     return usr_input
-
 
 def user_move(board: np.ndarray,
               _player: BoardPiece,

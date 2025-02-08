@@ -1,7 +1,6 @@
 from typing import Tuple
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 class AlphaZeroNet(nn.Module):
     def __init__(self, board_shape, num_actions):

@@ -2,10 +2,6 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 import torch.nn.functional as F
-import os
-from torch.utils.tensorboard import SummaryWriter
-
-from agents.agent_MCTS import neuralNetwork
 from agents.agent_MCTS.mcts import generate_move_mcts_with_policy
 from agents.agent_MCTS.node import other_player
 from game_utils import (
@@ -16,7 +12,6 @@ from game_utils import (
     check_end_state,
     initialize_game_state,
 )
-
 
 class Connect4Dataset(Dataset):
     def __init__(self, states, policies, values):
@@ -87,9 +82,7 @@ def train_model(
             total_value_loss += loss_value.item()
 
         avg_loss = total_loss / len(dataloader)
-        
-        current_lr = scheduler.get_last_lr()[0]
-        
+                
         scheduler.step(avg_loss)
         
         if avg_loss < best_loss:
