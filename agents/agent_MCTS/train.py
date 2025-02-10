@@ -13,7 +13,6 @@ from game_utils import (
     initialize_game_state,
 )
 
-
 class Connect4Dataset(Dataset):
     def __init__(self, states, policies, values):
         self.states = states
@@ -40,11 +39,10 @@ def train_model(
     device="cuda",
 ):
     """Train the AlphaZero model on stored (state, policy, value) data"""
-
+    
     model.to(device)
-    dataloader = DataLoader(dataset, batch_size=batch_size,
-                            shuffle=True, num_workers=4)
-
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+    
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer,
@@ -54,10 +52,10 @@ def train_model(
         cooldown=0,
         min_lr=1e-6
     )
-
+    
     scaler = torch.cuda.amp.GradScaler()
     compiled_model = torch.compile(model)
-
+    
     best_loss = float("inf")
 
     for epoch in range(epochs):
@@ -66,8 +64,7 @@ def train_model(
         total_policy_loss = 0.0
         total_value_loss = 0.0
         for state, policy, value in dataloader:
-            state, policy, value = state.to(
-                device), policy.to(device), value.to(device)
+            state, policy, value = state.to(device), policy.to(device), value.to(device)
 
             optimizer.zero_grad()
             with torch.cuda.amp.autocast():
@@ -75,27 +72,26 @@ def train_model(
                 loss_policy = F.mse_loss(predicted_policy, policy)
                 loss_value = F.mse_loss(predicted_value.squeeze(-1), value)
                 loss = loss_policy + loss_value
-
+                
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
-
+            
             total_loss += loss.item()
             total_policy_loss += loss_policy.item()
             total_value_loss += loss_value.item()
 
         avg_loss = total_loss / len(dataloader)
-
+                
         scheduler.step(avg_loss)
-
+        
         if avg_loss < best_loss:
             best_loss = avg_loss
             torch.save(model.state_dict(), "az4_trained.pt")
 
-
 def self_play_games(model: nn.Module, num_games: int = 5, num_simulations: int = 700):
     """Generate self-play data using the AlphaZero algorithm
-
+    
     Args:
         model (nn.Module): Neural network model
         num_games (int): Number of games to play
@@ -136,11 +132,11 @@ def self_play_games(model: nn.Module, num_games: int = 5, num_simulations: int =
                 outcome_p2 = 0.0
             else:
                 if current_player == PLAYER1:
-                    outcome_p1 = check_end_state(board, current_player)
+                    outcome_p1 = 1.0
                     outcome_p2 = -1.0
                 else:
                     outcome_p1 = -1.0
-                    outcome_p2 = check_end_state(board, current_player)
+                    outcome_p2 = 1.0
 
             for st, pol, pl in game_history:
                 if pl == PLAYER1:
