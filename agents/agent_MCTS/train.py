@@ -121,31 +121,13 @@ def self_play_games(model: nn.Module, num_games: int = 5, num_simulations: int =
 
             board_copy = board.copy()
             game_history.append((board_copy, policy, current_player))
-
             apply_player_action(board, move, current_player)
-            end_state = check_end_state(board, current_player)
-
             current_player = other_player(current_player)
 
-            if end_state == GameState.IS_DRAW:
-                outcome_p1 = 0.0
-                outcome_p2 = 0.0
-            else:
-                if current_player == PLAYER1:
-                    outcome_p1 = 1.0
-                    outcome_p2 = -1.0
-                else:
-                    outcome_p1 = -1.0
-                    outcome_p2 = 1.0
 
             for st, pol, pl in game_history:
-                if pl == PLAYER1:
-                    all_states.append(st)
-                    all_policies.append(pol)
-                    all_values.append(outcome_p1)
-                else:
-                    all_states.append(st)
-                    all_policies.append(pol)
-                    all_values.append(outcome_p2)
+                all_states.append(st)
+                all_policies.append(pol)
+                all_values.append(check_end_state(board, pl))
 
     return all_states, all_policies, all_values
