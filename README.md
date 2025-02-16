@@ -14,6 +14,6 @@ docker build -t az4
 
 ```shell
 conda env create -f environment.yml
-conda activate pp
+conda activate az4
 python main.py
 ```

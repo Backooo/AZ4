@@ -60,9 +60,9 @@ def generate_move_mcts(
 def generate_move_mcts_with_policy(
     board: np.ndarray,
     player: BoardPiece,
-    saved_state: Optional[object] = None,
-    model: Optional[nn.Module] = None,
+    saved_state: Optional[SavedState] = None,
     num_simulations: int = 700,
+    model: Optional[nn.Module] = None,
 ) -> Tuple[PlayerAction, np.ndarray, Optional[object]]:
     """
     Generates the next move for a player using the Monte Carlo Tree Search (MCTS) algorithm with policy distribution.

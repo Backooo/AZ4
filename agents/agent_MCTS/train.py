@@ -1,3 +1,4 @@
+import time
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
@@ -11,6 +12,7 @@ from game_utils import (
     apply_player_action,
     check_end_state,
     initialize_game_state,
+    pretty_print_board,
 )
 
 class Connect4Dataset(Dataset):
@@ -36,7 +38,7 @@ def train_model(
     epochs=10,
     batch_size=64,
     lr=1e-3,
-    device="cuda",
+    device="cpu",
 ):
     """Train the AlphaZero model on stored (state, policy, value) data"""
     
@@ -54,21 +56,20 @@ def train_model(
     )
     
     scaler = torch.cuda.amp.GradScaler()
-    compiled_model = torch.compile(model)
     
-    best_loss = float("inf")
 
     for epoch in range(epochs):
         model.train()
         total_loss = 0.0
         total_policy_loss = 0.0
         total_value_loss = 0.0
+        
         for state, policy, value in dataloader:
             state, policy, value = state.to(device), policy.to(device), value.to(device)
 
             optimizer.zero_grad()
             with torch.cuda.amp.autocast():
-                predicted_policy, predicted_value = compiled_model(state)
+                predicted_policy, predicted_value = model(state)
                 loss_policy = F.mse_loss(predicted_policy, policy)
                 loss_value = F.mse_loss(predicted_value.squeeze(-1), value)
                 loss = loss_policy + loss_value
@@ -84,10 +85,13 @@ def train_model(
         avg_loss = total_loss / len(dataloader)
                 
         scheduler.step(avg_loss)
+        print(f"Epoch {epoch+1}/{epochs} Loss: {avg_loss:.4f} Policy Loss: {total_policy_loss:.4f} Value Loss: {total_value_loss:.4f}")
         
+        '''
         if avg_loss < best_loss:
             best_loss = avg_loss
             torch.save(model.state_dict(), "az4_trained.pt")
+        '''
 
 def self_play_games(model: nn.Module, num_games: int = 5, num_simulations: int = 700):
     """Generate self-play data using the AlphaZero algorithm
@@ -100,17 +104,17 @@ def self_play_games(model: nn.Module, num_games: int = 5, num_simulations: int =
     all_states = []
     all_policies = []
     all_values = []
+    
+    positions_count = 0
 
-    for game_index in range(num_games):
+    for _ in range(num_games):
         board = initialize_game_state()
         saved_state = {PLAYER1: None, PLAYER2: None}
         current_player = PLAYER1
 
         game_history = []
-        move_count = 0
 
         while True:
-            move_count += 1
             move, policy, saved_state[current_player] = generate_move_mcts_with_policy(
                 board=board,
                 player=current_player,
@@ -125,27 +129,23 @@ def self_play_games(model: nn.Module, num_games: int = 5, num_simulations: int =
             apply_player_action(board, move, current_player)
             end_state = check_end_state(board, current_player)
 
-            current_player = other_player(current_player)
-
             if end_state == GameState.IS_DRAW:
-                outcome_p1 = 0.0
-                outcome_p2 = 0.0
+                value = 0.0
+            elif end_state == GameState.IS_WIN:
+                value = 1.0 if current_player == PLAYER1 else -1.0
             else:
-                if current_player == PLAYER1:
-                    outcome_p1 = 1.0
-                    outcome_p2 = -1.0
-                else:
-                    outcome_p1 = -1.0
-                    outcome_p2 = 1.0
+                value = None
 
-            for st, pol, pl in game_history:
-                if pl == PLAYER1:
+            if value is not None:
+                for st, pol, pl in game_history:
                     all_states.append(st)
                     all_policies.append(pol)
-                    all_values.append(outcome_p1)
-                else:
-                    all_states.append(st)
-                    all_policies.append(pol)
-                    all_values.append(outcome_p2)
+                    all_values.append(value if pl == current_player else -value)
+
+                positions_count += len(game_history)
+                break
+
+            current_player = other_player(current_player)
+            print(pretty_print_board(board))
 
     return all_states, all_policies, all_values
