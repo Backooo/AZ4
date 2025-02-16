@@ -125,7 +125,6 @@ def self_play_games(model: nn.Module, num_games: int = 5, num_simulations: int =
 
             board_copy = board.copy()
             game_history.append((board_copy, policy, current_player))
-
             apply_player_action(board, move, current_player)
             end_state = check_end_state(board, current_player)
 
